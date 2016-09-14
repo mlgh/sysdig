@@ -30,7 +30,6 @@
 #include <memory>
 #include <cstring>
 #include <climits>
-//#include "sinsp_curl.h"
 
 template <typename T>
 class socket_data_handler
@@ -237,31 +236,33 @@ public:
 		connection_error:
 		{
 			std::string err = strerror(errno);
-			g_logger.log("Socket handler (" + m_id + ") connection [" + m_url.to_string(false) + "] error : " + err,
-						 sinsp_logger::SEV_ERROR);
+			std::ostringstream os;
+			os << "Socket handler (" << m_id << ") connection [" << m_url.to_string(false) << "] error: " << err;
 			if(m_url.is_secure())
 			{
 				std::string ssl_err = ssl_errors();
 				if(!ssl_err.empty())
 				{
-					g_logger.log(ssl_err, sinsp_logger::SEV_ERROR);
+					os << std::endl << "SSL error: " << ssl_err;
 				}
 			}
-			throw sinsp_exception("Socket handler (" + m_id + ") send error.");
+			throw sinsp_exception(os.str());
 		}
 
 		connection_closed:
 		{
+			std::ostringstream os;
+			os << "Socket handler (" << m_id << ") connection [" << m_url.to_string(false) << "] closed.";
 			if(m_url.is_secure())
 			{
 				std::string ssl_err = ssl_errors();
 				if(!ssl_err.empty())
 				{
-					g_logger.log(ssl_err, sinsp_logger::SEV_ERROR);
+					os << std::endl << "SSL error: " << ssl_err;
 				}
 			}
 			m_connected = false;
-			throw sinsp_exception("Socket handler (" + m_id + ") connection [" + m_url.to_string(false) + "] closed.");
+			throw sinsp_exception(os.str());
 		}
 	}
 
@@ -1220,7 +1221,7 @@ private:
 		if(m_socket != -1)
 		{
 			g_logger.log("Socket handler (" + m_id + ") closing connection to " + m_url.to_string(false),
-					 sinsp_logger::SEV_INFO);
+					 sinsp_logger::SEV_DEBUG);
 			int ret = close(m_socket);
 			if(ret < 0)
 			{
