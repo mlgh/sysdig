@@ -18,6 +18,7 @@ std::string k8s_daemonset_handler::EVENT_FILTER =
 	" ["
 	"  .object |"
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -38,6 +39,7 @@ std::string k8s_daemonset_handler::STATE_FILTER =
 	" ["
 	"  .items[] | "
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -78,7 +80,7 @@ bool k8s_daemonset_handler::handle_component(const Json::Value& json, const msg_
 			{
 				k8s_daemonset_t& ds =
 					m_state->get_component<k8s_daemonsets, k8s_daemonset_t>(m_state->get_daemonsets(),
-																  data->m_name, data->m_uid);
+																  data->m_name, data->m_uid, data->m_namespace);
 				k8s_pair_list entries = extract_object(json["labels"]);
 				if(entries.size() > 0)
 				{

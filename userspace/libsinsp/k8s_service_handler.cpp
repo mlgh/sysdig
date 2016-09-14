@@ -18,6 +18,7 @@ std::string k8s_service_handler::EVENT_FILTER =
 	" ["
 	"  .object |"
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -38,6 +39,7 @@ std::string k8s_service_handler::STATE_FILTER =
 	" ["
 	"  .items[] | "
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -174,7 +176,7 @@ bool k8s_service_handler::handle_component(const Json::Value& json, const msg_da
 			{
 				k8s_service_t& service =
 					m_state->get_component<k8s_services, k8s_service_t>(m_state->get_services(),
-																		data->m_name, data->m_uid);
+																		data->m_name, data->m_uid, data->m_namespace);
 				k8s_pair_list entries = k8s_component::extract_object(json, "labels");
 				if(entries.size() > 0)
 				{

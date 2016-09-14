@@ -18,6 +18,7 @@ std::string k8s_replicationcontroller_handler::EVENT_FILTER =
 	" ["
 	"  .object |"
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -38,6 +39,7 @@ std::string k8s_replicationcontroller_handler::STATE_FILTER =
 	" ["
 	"  .items[] | "
 	"  {"
+	"   namespace: .metadata.namespace,"
 	"   name: .metadata.name,"
 	"   uid: .metadata.uid,"
 	"   timestamp: .metadata.creationTimestamp,"
@@ -77,7 +79,8 @@ bool k8s_replicationcontroller_handler::handle_component(const Json::Value& json
 			   (data->m_reason == k8s_component::COMPONENT_MODIFIED))
 			{
 				k8s_rc_t& rc =
-					m_state->get_component<k8s_controllers, k8s_rc_t>(m_state->get_rcs(), data->m_name, data->m_uid);
+					m_state->get_component<k8s_controllers, k8s_rc_t>(m_state->get_rcs(),
+																	  data->m_name, data->m_uid, data->m_namespace);
 				k8s_pair_list entries = extract_object(json["labels"]);
 				if(entries.size() > 0)
 				{
