@@ -1032,14 +1032,35 @@ private:
 				else
 				{
 					int err = SSL_get_error(m_ssl_connection, ret);
-					if(err != SSL_ERROR_WANT_WRITE && err != SSL_ERROR_WANT_READ)
+					switch(err)
 					{
+					case SSL_ERROR_NONE:             // 0
+						break;
+					case SSL_ERROR_SSL:              // 1
 						throw sinsp_exception(ssl_errors());
-					}
-					else
-					{
-						g_logger.log(ssl_errors(), sinsp_logger::SEV_WARNING);
-						return false;
+					case SSL_ERROR_WANT_READ:        // 2
+					case SSL_ERROR_WANT_WRITE:       // 3
+						break;
+					case SSL_ERROR_WANT_X509_LOOKUP: // 4
+						break;
+					case SSL_ERROR_SYSCALL:          // 5
+						throw sinsp_exception("Socket handler (" + m_id + "), "
+											  "error "  + std::to_string(err) + " (" + strerror(errno) + ") "
+											  "while connecting to " +
+											  m_url.get_host() + ':' + std::to_string(m_url.get_port()));
+					case SSL_ERROR_ZERO_RETURN:      // 6
+						cleanup();
+						break;
+					case SSL_ERROR_WANT_CONNECT:     // 7
+						throw sinsp_exception("Socket handler (" + m_id + "), "
+											  "error (the operation failed while attempting to connect "
+											  "the transport) while connecting to " +
+											  m_url.get_host() + ':' + std::to_string(m_url.get_port()));
+					case SSL_ERROR_WANT_ACCEPT:      // 8
+						throw sinsp_exception("Socket handler (" + m_id + "), "
+											  "error (the operation failed while attempting to accept a"
+											  " connection from the transport) while connecting to " +
+											  m_url.get_host() + ':' + std::to_string(m_url.get_port()));
 					}
 				}
 			}
