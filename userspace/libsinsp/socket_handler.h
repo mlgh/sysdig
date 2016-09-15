@@ -1040,17 +1040,18 @@ private:
 						throw sinsp_exception(ssl_errors());
 					case SSL_ERROR_WANT_READ:        // 2
 					case SSL_ERROR_WANT_WRITE:       // 3
-						break;
+						return false;
 					case SSL_ERROR_WANT_X509_LOOKUP: // 4
 						break;
 					case SSL_ERROR_SYSCALL:          // 5
-						throw sinsp_exception("Socket handler (" + m_id + "), "
-											  "error "  + std::to_string(err) + " (" + strerror(errno) + ") "
-											  "while connecting to " +
+						throw sinsp_exception("Socket handler (" + m_id + "), error "  + std::to_string(err) +
+											  " (" + strerror(errno) + ") while connecting to " +
 											  m_url.get_host() + ':' + std::to_string(m_url.get_port()));
 					case SSL_ERROR_ZERO_RETURN:      // 6
 						cleanup();
-						break;
+						throw sinsp_exception("Socket handler (" + m_id + "), "
+											  "error (connection closed) while connecting to " +
+											  m_url.get_host() + ':' + std::to_string(m_url.get_port()));
 					case SSL_ERROR_WANT_CONNECT:     // 7
 						throw sinsp_exception("Socket handler (" + m_id + "), "
 											  "error (the operation failed while attempting to connect "
