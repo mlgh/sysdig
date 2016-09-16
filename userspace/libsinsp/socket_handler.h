@@ -986,7 +986,7 @@ private:
 		else
 		{
 			g_logger.log("Socket handler (" + m_id + ") connecting to " + m_address +
-						 " (socket=" + std::to_string(m_socket) + ')', sinsp_logger::SEV_INFO);
+						 " (socket=" + std::to_string(m_socket) + ')', sinsp_logger::SEV_DEBUG);
 			if(!m_sa || !m_sa_len)
 			{
 				std::ostringstream os;
@@ -1024,10 +1024,12 @@ private:
 					m_connecting = false;
 					m_connected = true;
 					g_logger.log("Socket handler (" + m_id + "): "
-								 "SSL connected to " + m_url.get_host() + ", "
-								 "socket=" + std::to_string(m_socket) +
-								 "local port=" + std::to_string(get_local_port()),
+								 "SSL connected to " + m_url.get_host(),
 								 sinsp_logger::SEV_INFO);
+					g_logger.log("Socket handler (" + m_id + "): "
+								 "SSL socket=" + std::to_string(m_socket) + ", "
+								 "local port=" + std::to_string(get_local_port()),
+								 sinsp_logger::SEV_DEBUG);
 				}
 				else
 				{
@@ -1073,7 +1075,7 @@ private:
 		}
 
 		g_logger.log("Socket handler (" + m_id + "): Connected: socket=" + std::to_string(m_socket) +
-					 ", collecting data from " + m_url.to_string(false), sinsp_logger::SEV_INFO);
+					 ", collecting data from " + m_url.to_string(false), sinsp_logger::SEV_DEBUG);
 
 		if(m_url.is_secure() && m_ssl && m_ssl->verify_peer())
 		{
@@ -1149,6 +1151,7 @@ private:
 										g_logger.log("Socket handler (" + m_id + "): " + m_url.get_host() + " resolved to " + m_address,
 															 sinsp_logger::SEV_TRACE);
 										dns_cleanup();
+										break;
 									}
 								}
 							}
@@ -1171,7 +1174,7 @@ private:
 							case EAI_AGAIN:
 							case EAI_INPROGRESS:
 								g_logger.log("Socket handler (" + m_id + ") [" + m_url.get_host() + "]: " + gai_strerror(ret),
-											 sinsp_logger::SEV_INFO);
+											 sinsp_logger::SEV_DEBUG);
 								break;
 							case EAI_SYSTEM:
 								g_logger.log("Socket handler (" + m_id + "): " + m_url.get_host() + ", resolver error: " + gai_strerror(ret) +
@@ -1256,24 +1259,34 @@ private:
 
 	bool dns_cleanup(struct gaicb** dns_reqs)
 	{
-		if(dns_reqs)
+		if(dns_reqs && dns_reqs[0])
 		{
 			int ret = gai_cancel(dns_reqs[0]);
 			int err = gai_error(dns_reqs[0]);
 			if(ret == EAI_ALLDONE || err == EAI_CANCELED)
 			{
-				freeaddrinfo(dns_reqs[0]->ar_result);
-				free((void*)dns_reqs[0]->ar_name);
+				if(dns_reqs[0]->ar_result)
+				{
+					freeaddrinfo(dns_reqs[0]->ar_result);
+				}
+				if(dns_reqs[0]->ar_name)
+				{
+					free((void*)dns_reqs[0]->ar_name);
+				}
 				free(dns_reqs[0]);
+				dns_reqs[0] = 0;
 				free(dns_reqs);
 				return true;
 			}
-			else if(err == EAI_INPROGRESS)
+			else if(err == EAI_INPROGRESS || err == EAI_AGAIN)
 			{
+				std::string errstr = (err == EAI_INPROGRESS ) ?
+									"processing in progress" :
+									"resources temporarily unavailable";
 				g_logger.log("Socket handler (" + m_id + ") connection [" + m_url.to_string(false) + "], "
-							 " cancelling DNS request postponed (processing still in progress)"
+							 " cancelling DNS request postponed (" + errstr + ")"
 							 "\n err: (" + std::to_string(err) + ") " + gai_strerror(err),
-							 sinsp_logger::SEV_INFO);
+							 sinsp_logger::SEV_DEBUG);
 				return false;
 			}
 			else

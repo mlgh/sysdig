@@ -158,7 +158,7 @@ string sinsp_curl::get_data()
 	{
 		return os.str();
 	}
-	g_logger.log("CURL error: [" + os.str() + ']', sinsp_logger::SEV_ERROR);
+	g_logger.log("CURL error: [" + os.str() + "] while connecting to " + m_uri.to_string(), sinsp_logger::SEV_ERROR);
 	return "";
 }
 

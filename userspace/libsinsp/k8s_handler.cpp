@@ -290,12 +290,12 @@ void k8s_handler::collect_data()
 		}
 		m_req_sent = false;
 		g_logger.log("k8s_handler (" + m_id + "), http interface not (yet?) connected to " + m_url,
-					 sinsp_logger::SEV_WARNING);
+					 sinsp_logger::SEV_TRACE);
 	}
 	else
 	{
 		g_logger.log("k8s_handler (" + m_id + "), http interface not (yet?) created for " + m_url + ").",
-					 sinsp_logger::SEV_WARNING);
+					 sinsp_logger::SEV_TRACE);
 	}
 }
 
