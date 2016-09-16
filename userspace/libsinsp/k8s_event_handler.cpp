@@ -134,10 +134,10 @@ bool k8s_event_handler::handle_component(const Json::Value& json, const msg_data
 						}
 						else
 						{
-							g_logger.log("K8s EVENT: old event, ignoring: "/*firstTimestamp=" + std::to_string(first_ts) +*/
+							g_logger.log("K8s EVENT: old event, ignoring: "
 										 ", lastTimestamp=" + std::to_string(last_ts) + ", now_ts=" + std::to_string(now_ts),
 										sinsp_logger::SEV_DEBUG);
-							return false;
+							return true;
 						}
 					}
 					else
